@@ -1,38 +1,444 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 .App {
-  text-align: center;
-}
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
   min-height: 100vh;
+  background: #f5f5f5;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+}
+
+/* Header and Navigation */
+.App-header {
+  background: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem 2rem;
+}
+
+.App-header h1 {
+  color: #2c3e50;
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+}
+
+.nav-tabs {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  gap: 1rem;
+  border-top: 1px solid #e0e0e0;
+  padding-top: 1rem;
+}
+
+.nav-tabs button {
+  padding: 0.5rem 1.5rem;
+  background: transparent;
+  border: none;
+  color: #666;
+  font-size: 1rem;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.3s;
+}
+
+.nav-tabs button:hover {
+  color: #333;
+}
+
+.nav-tabs button.active {
+  color: #2c3e50;
+  border-bottom-color: #4CAF50;
+  font-weight: 600;
+}
+
+.logout-btn {
+  margin-left: auto !important;
+  color: #f44336 !important;
+}
+
+/* Main Content Area */
+main {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 0 2rem;
+}
+
+/* Report Form View */
+.report-view {
+  background: white;
+  border-radius: 8px;
+  padding: 2rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.form-intro {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.form-intro h2 {
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+}
+
+.form-intro p {
+  color: #666;
+  line-height: 1.6;
+}
+
+/* Thank You Message */
+.thank-you-message {
+  text-align: center;
+  padding: 3rem;
+}
+
+.thank-you-message h2 {
+  color: #4CAF50;
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.thank-you-message p {
+  color: #666;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.thank-you-message button {
+  margin-top: 2rem;
+  padding: 0.75rem 2rem;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.thank-you-message button:hover {
+  background: #45a049;
+}
+
+/* Form Styles */
+.safety-form {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.safety-form h2 {
+  display: none; /* Hidden since we have the intro */
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #4CAF50;
+}
+
+.form-buttons {
+  display: flex;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.form-buttons button {
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.form-buttons button[type="submit"] {
+  background: #4CAF50;
   color: white;
 }
 
-.App-link {
-  color: #61dafb;
+.form-buttons button[type="submit"]:hover {
+  background: #45a049;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+.cancel-btn {
+  display: none; /* Hide cancel since form is always shown */
+}
+
+/* Authentication Form */
+.auth-form {
+  background: white;
+  border-radius: 8px;
+  padding: 3rem;
+  max-width: 400px;
+  margin: 2rem auto;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.auth-form h2 {
+  color: #2c3e50;
+  margin-bottom: 1rem;
+}
+
+.auth-form p {
+  color: #666;
+  margin-bottom: 2rem;
+}
+
+.auth-form input {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.auth-form button {
+  width: 100%;
+  padding: 0.75rem;
+  background: #2c3e50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.auth-form button:hover {
+  background: #34495e;
+}
+
+/* Reports View */
+.reports-view {
+  background: white;
+  border-radius: 8px;
+  padding: 2rem;
+}
+
+.reports-header {
+  margin-bottom: 2rem;
+}
+
+.reports-header h2 {
+  color: #2c3e50;
+  margin-bottom: 1rem;
+}
+
+.stats-bar {
+  display: flex;
+  gap: 2rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+
+.stats-bar span {
+  font-weight: 500;
+}
+
+/* Admin Dashboard */
+.admin-dashboard {
+  background: white;
+  border-radius: 8px;
+  padding: 2rem;
+}
+
+.admin-dashboard h2 {
+  color: #2c3e50;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.stat-card {
+  padding: 2rem;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.stat-card h3 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.stat-card p {
+  color: #666;
+  font-size: 1rem;
+}
+
+.stat-card.total {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.stat-card.open {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+}
+
+.stat-card.closed {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  color: white;
+}
+
+.type-breakdown {
+  margin-bottom: 2rem;
+}
+
+.type-breakdown h3 {
+  color: #2c3e50;
+  margin-bottom: 1rem;
+}
+
+.type-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.type-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+
+.type-label {
+  font-weight: 500;
+}
+
+.type-count {
+  background: #2c3e50;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+}
+
+.admin-actions {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.admin-actions button {
+  padding: 0.75rem 2rem;
+  background: #2c3e50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.admin-actions button:hover {
+  background: #34495e;
+}
+
+/* Reports List */
+.reports-list {
+  max-width: 100%;
+}
+
+.report-card {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  transition: transform 0.2s;
+}
+
+.report-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.report-type {
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.report-status {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.report-status.open {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.report-status.closed {
+  background: #d4edda;
+  color: #155724;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .header-content {
+    padding: 1rem;
   }
-  to {
-    transform: rotate(360deg);
+
+  .App-header h1 {
+    font-size: 1.4rem;
+  }
+
+  .nav-tabs {
+    overflow-x: auto;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  main {
+    padding: 0 1rem;
   }
 }
