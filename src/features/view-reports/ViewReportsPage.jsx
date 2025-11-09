@@ -1,19 +1,34 @@
 import { useState } from 'react';
-import { Search, ChevronDown, ChevronUp, Trash2, MessageSquare, User } from 'lucide-react';
-import { useReports, useDeleteAllReports, useUpdateReportStatus, useAssignReport } from '@hooks/useReports';
+import { Search, ChevronDown, ChevronUp, Trash2, MessageSquare, User, Download, Filter, X } from 'lucide-react';
+import { useReports, useDeleteReport, useDeleteAllReports, useUpdateReportStatus, useAssignReport } from '@hooks/useReports';
 import { useComments, useAddComment } from '@hooks/useComments';
 import { Button, Card, Badge, Input, Select, Textarea, Modal, LoadingScreen } from '@components/ui';
-import { STATUS_TYPES, STATUS_COLORS, PRIORITY_COLORS } from '@utils/constants';
+import { STATUS_TYPES, STATUS_COLORS, PRIORITY_COLORS, REPORT_TYPES, PRIORITY_LEVELS } from '@utils/constants';
 import { formatDate } from '@utils/helpers';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 export const ViewReportsPage = ({ toast }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedReport, setSelectedReport] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null); // 'all' or report id
   const [commentText, setCommentText] = useState('');
   const [userName, setUserName] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Filter states
+  const [filters, setFilters] = useState({
+    type: '',
+    priority: '',
+    status: '',
+    dateFrom: '',
+    dateTo: '',
+  });
 
   const { data: reports = [], isLoading, error, refetch } = useReports();
+  const { mutate: deleteReport } = useDeleteReport();
   const { mutate: deleteAll } = useDeleteAllReports();
   const { mutate: updateStatus } = useUpdateReportStatus();
   const { mutate: assignReport } = useAssignReport();
@@ -22,17 +37,43 @@ export const ViewReportsPage = ({ toast }) => {
   // Get comments for selected report
   const { data: comments = [] } = useComments(selectedReport?.id);
 
+  const handleDeleteSingle = (reportId) => {
+    setDeleteTarget(reportId);
+    setShowDeleteConfirm(true);
+  };
+
   const handleDeleteAll = () => {
-    deleteAll(undefined, {
-      onSuccess: () => {
-        toast.success('All reports deleted successfully');
-        setShowDeleteConfirm(false);
-        refetch();
-      },
-      onError: () => {
-        toast.error('Failed to delete reports');
-      },
-    });
+    setDeleteTarget('all');
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = () => {
+    if (deleteTarget === 'all') {
+      deleteAll(undefined, {
+        onSuccess: () => {
+          toast.success('All reports deleted successfully');
+          setShowDeleteConfirm(false);
+          setDeleteTarget(null);
+          refetch();
+        },
+        onError: () => {
+          toast.error('Failed to delete reports');
+        },
+      });
+    } else {
+      deleteReport(deleteTarget, {
+        onSuccess: () => {
+          toast.success('Report deleted successfully');
+          setShowDeleteConfirm(false);
+          setDeleteTarget(null);
+          setSelectedReport(null);
+          refetch();
+        },
+        onError: () => {
+          toast.error('Failed to delete report');
+        },
+      });
+    }
   };
 
   const handleStatusChange = (reportId, newStatus) => {
@@ -93,16 +134,142 @@ export const ViewReportsPage = ({ toast }) => {
     );
   };
 
+  const clearFilters = () => {
+    setFilters({
+      type: '',
+      priority: '',
+      status: '',
+      dateFrom: '',
+      dateTo: '',
+    });
+  };
+
   // Filter reports
   const filteredReports = reports.filter((report) => {
     const searchLower = searchTerm.toLowerCase();
-    return (
+    const matchesSearch =
       report.type?.toLowerCase().includes(searchLower) ||
       report.location?.toLowerCase().includes(searchLower) ||
       report.description?.toLowerCase().includes(searchLower) ||
-      report.status?.toLowerCase().includes(searchLower)
-    );
+      report.status?.toLowerCase().includes(searchLower);
+
+    const matchesType = !filters.type || report.type === filters.type;
+    const matchesPriority = !filters.priority || report.priority === filters.priority;
+    const matchesStatus = !filters.status || report.status === filters.status;
+
+    let matchesDateFrom = true;
+    let matchesDateTo = true;
+    if (filters.dateFrom) {
+      const reportDate = new Date(report.created_at);
+      const fromDate = new Date(filters.dateFrom);
+      matchesDateFrom = reportDate >= fromDate;
+    }
+    if (filters.dateTo) {
+      const reportDate = new Date(report.created_at);
+      const toDate = new Date(filters.dateTo);
+      toDate.setHours(23, 59, 59, 999);
+      matchesDateTo = reportDate <= toDate;
+    }
+
+    return matchesSearch && matchesType && matchesPriority && matchesStatus && matchesDateFrom && matchesDateTo;
   });
+
+  // Export to Excel
+  const exportToExcel = () => {
+    const exportData = filteredReports.map((report) => ({
+      'ID': report.id,
+      'Type': report.type,
+      'Priority': report.priority,
+      'Status': report.status,
+      'Location': report.location,
+      'Sub-Location': report.sub_location,
+      'Specific Room': report.specific_room,
+      'Incident Date': report.incident_datetime || 'N/A',
+      'Description': report.description,
+      'Actions Taken': report.actions_taken || 'N/A',
+      'Immediate Actions': report.immediate_actions || 'N/A',
+      'Observer Name': report.observer_name || 'Anonymous',
+      'Observer Email': report.observer_email || 'N/A',
+      'Assigned To': report.assigned_to || 'Unassigned',
+      'Created At': formatDate(report.created_at),
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Safety Reports');
+
+    // Auto-size columns
+    const maxWidth = exportData.reduce((w, r) => Math.max(w, r.Description?.length || 0), 10);
+    ws['!cols'] = [
+      { wch: 5 },  // ID
+      { wch: 20 }, // Type
+      { wch: 10 }, // Priority
+      { wch: 12 }, // Status
+      { wch: 15 }, // Location
+      { wch: 20 }, // Sub-Location
+      { wch: 20 }, // Specific Room
+      { wch: 20 }, // Incident Date
+      { wch: Math.min(maxWidth, 50) }, // Description
+      { wch: 30 }, // Actions Taken
+      { wch: 30 }, // Immediate Actions
+      { wch: 20 }, // Observer Name
+      { wch: 25 }, // Observer Email
+      { wch: 20 }, // Assigned To
+      { wch: 20 }, // Created At
+    ];
+
+    XLSX.writeFile(wb, `safety-reports-${new Date().toISOString().split('T')[0]}.xlsx`);
+    toast.success('Excel file downloaded successfully');
+  };
+
+  // Export to PDF
+  const exportToPDF = () => {
+    const doc = new jsPDF('l', 'mm', 'a4'); // landscape mode
+
+    // Add title
+    doc.setFontSize(18);
+    doc.text('Nucleus Safety Reports', 14, 15);
+
+    // Add date
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 22);
+    doc.text(`Total Reports: ${filteredReports.length}`, 14, 27);
+
+    // Prepare table data
+    const tableData = filteredReports.map((report) => [
+      report.id,
+      report.type,
+      report.priority,
+      report.status,
+      `${report.location} › ${report.sub_location}`,
+      report.description?.substring(0, 100) + (report.description?.length > 100 ? '...' : ''),
+      report.observer_name || 'Anonymous',
+      formatDate(report.created_at),
+    ]);
+
+    // Add table
+    doc.autoTable({
+      startY: 32,
+      head: [['ID', 'Type', 'Priority', 'Status', 'Location', 'Description', 'Reporter', 'Date']],
+      body: tableData,
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [37, 99, 235], fontStyle: 'bold' },
+      columnStyles: {
+        0: { cellWidth: 10 },  // ID
+        1: { cellWidth: 25 },  // Type
+        2: { cellWidth: 15 },  // Priority
+        3: { cellWidth: 20 },  // Status
+        4: { cellWidth: 40 },  // Location
+        5: { cellWidth: 70 },  // Description
+        6: { cellWidth: 30 },  // Reporter
+        7: { cellWidth: 30 },  // Date
+      },
+      margin: { top: 32 },
+    });
+
+    doc.save(`safety-reports-${new Date().toISOString().split('T')[0]}.pdf`);
+    toast.success('PDF file downloaded successfully');
+  };
 
   if (isLoading) return <LoadingScreen message="Loading reports..." />;
   if (error) {
@@ -120,28 +287,101 @@ export const ViewReportsPage = ({ toast }) => {
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900 mb-4">View Reports</h1>
 
-        <div className="flex flex-col sm:flex-row gap-4">
-          {/* Search */}
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder="Search reports..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            />
+        <div className="flex flex-col gap-4">
+          {/* Search and Actions */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            {/* Search */}
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Search reports..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Filter Toggle */}
+            <Button
+              variant="outline"
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <Filter className="w-4 h-4" />
+              {showFilters ? 'Hide Filters' : 'Show Filters'}
+            </Button>
+
+            {/* Export Buttons */}
+            <Button
+              variant="outline"
+              onClick={exportToExcel}
+              disabled={filteredReports.length === 0}
+            >
+              <Download className="w-4 h-4" />
+              Excel
+            </Button>
+            <Button
+              variant="outline"
+              onClick={exportToPDF}
+              disabled={filteredReports.length === 0}
+            >
+              <Download className="w-4 h-4" />
+              PDF
+            </Button>
+
+            {/* Delete All */}
+            <Button
+              variant="danger"
+              onClick={handleDeleteAll}
+              disabled={reports.length === 0}
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete All
+            </Button>
           </div>
 
-          {/* Delete All */}
-          <Button
-            variant="danger"
-            onClick={() => setShowDeleteConfirm(true)}
-            disabled={reports.length === 0}
-          >
-            <Trash2 className="w-4 h-4" />
-            Delete All
-          </Button>
+          {/* Filters Panel */}
+          {showFilters && (
+            <Card className="bg-blue-50 border-blue-200">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold text-gray-900">Filters</h3>
+                <Button variant="ghost" size="sm" onClick={clearFilters}>
+                  <X className="w-4 h-4" />
+                  Clear All
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <Select
+                  value={filters.type}
+                  onChange={(e) => setFilters({ ...filters, type: e.target.value })}
+                  options={[{ value: '', label: 'All Types' }, ...REPORT_TYPES.filter(t => t.value)]}
+                />
+                <Select
+                  value={filters.priority}
+                  onChange={(e) => setFilters({ ...filters, priority: e.target.value })}
+                  options={[{ value: '', label: 'All Priorities' }, ...PRIORITY_LEVELS]}
+                />
+                <Select
+                  value={filters.status}
+                  onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                  options={[{ value: '', label: 'All Statuses' }, ...STATUS_TYPES]}
+                />
+                <Input
+                  type="date"
+                  value={filters.dateFrom}
+                  onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
+                  placeholder="From Date"
+                />
+                <Input
+                  type="date"
+                  value={filters.dateTo}
+                  onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
+                  placeholder="To Date"
+                />
+              </div>
+            </Card>
+          )}
         </div>
       </div>
 
@@ -149,24 +389,24 @@ export const ViewReportsPage = ({ toast }) => {
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
         <Card className="text-center">
           <p className="text-gray-600 text-sm">Total Reports</p>
-          <p className="text-3xl font-bold text-gray-900">{reports.length}</p>
+          <p className="text-3xl font-bold text-gray-900">{filteredReports.length}</p>
         </Card>
         <Card className="text-center">
           <p className="text-gray-600 text-sm">Open</p>
           <p className="text-3xl font-bold text-red-600">
-            {reports.filter((r) => r.status === 'Open').length}
+            {filteredReports.filter((r) => r.status === 'Open').length}
           </p>
         </Card>
         <Card className="text-center">
           <p className="text-gray-600 text-sm">In Progress</p>
           <p className="text-3xl font-bold text-yellow-600">
-            {reports.filter((r) => r.status === 'In Progress').length}
+            {filteredReports.filter((r) => r.status === 'In Progress').length}
           </p>
         </Card>
         <Card className="text-center">
           <p className="text-gray-600 text-sm">Resolved</p>
           <p className="text-3xl font-bold text-green-600">
-            {reports.filter((r) => r.status === 'Resolved').length}
+            {filteredReports.filter((r) => r.status === 'Resolved').length}
           </p>
         </Card>
       </div>
@@ -175,7 +415,7 @@ export const ViewReportsPage = ({ toast }) => {
       {filteredReports.length === 0 ? (
         <Card className="text-center py-12">
           <p className="text-gray-500 text-lg">
-            {searchTerm ? 'No reports match your search' : 'No reports submitted yet'}
+            {searchTerm || Object.values(filters).some(v => v) ? 'No reports match your search or filters' : 'No reports submitted yet'}
           </p>
         </Card>
       ) : (
@@ -183,7 +423,7 @@ export const ViewReportsPage = ({ toast }) => {
           {filteredReports.map((report) => (
             <Card
               key={report.id}
-              className={`${selectedReport?.id === report.id ? 'ring-2 ring-purple-500' : ''}`}
+              className={`${selectedReport?.id === report.id ? 'ring-2 ring-blue-500' : ''}`}
             >
               {/* Report Header */}
               <div
@@ -241,9 +481,23 @@ export const ViewReportsPage = ({ toast }) => {
                       <p className="text-gray-700">{report.description}</p>
                     </div>
 
+                    {report.incident_datetime && (
+                      <div>
+                        <h4 className="font-semibold text-gray-900 mb-2">Incident Date/Time</h4>
+                        <p className="text-gray-700">{new Date(report.incident_datetime).toLocaleString()}</p>
+                      </div>
+                    )}
+
+                    {report.immediate_actions && (
+                      <div>
+                        <h4 className="font-semibold text-gray-900 mb-2">Immediate Actions</h4>
+                        <p className="text-gray-700">{report.immediate_actions}</p>
+                      </div>
+                    )}
+
                     {report.actions_taken && (
                       <div>
-                        <h4 className="font-semibold text-gray-900 mb-2">Actions Taken</h4>
+                        <h4 className="font-semibold text-gray-900 mb-2">Additional Actions</h4>
                         <p className="text-gray-700">{report.actions_taken}</p>
                       </div>
                     )}
@@ -282,6 +536,10 @@ export const ViewReportsPage = ({ toast }) => {
                     <Button variant="outline" onClick={() => handleAssign(report.id)}>
                       <User className="w-4 h-4" />
                       {report.assigned_to ? 'Reassign' : 'Assign'}
+                    </Button>
+                    <Button variant="danger" onClick={() => handleDeleteSingle(report.id)}>
+                      <Trash2 className="w-4 h-4" />
+                      Delete Report
                     </Button>
                   </div>
 
@@ -335,19 +593,29 @@ export const ViewReportsPage = ({ toast }) => {
       {/* Delete Confirmation Modal */}
       <Modal
         isOpen={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
-        title="Delete All Reports"
+        onClose={() => {
+          setShowDeleteConfirm(false);
+          setDeleteTarget(null);
+        }}
+        title={deleteTarget === 'all' ? 'Delete All Reports' : 'Delete Report'}
       >
         <p className="text-gray-700 mb-6">
-          Are you sure you want to delete all {reports.length} reports? This action cannot be
-          undone.
+          {deleteTarget === 'all'
+            ? `Are you sure you want to delete all ${reports.length} reports? This action cannot be undone.`
+            : 'Are you sure you want to delete this report? This action cannot be undone.'}
         </p>
         <div className="flex justify-end gap-3">
-          <Button variant="secondary" onClick={() => setShowDeleteConfirm(false)}>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setShowDeleteConfirm(false);
+              setDeleteTarget(null);
+            }}
+          >
             Cancel
           </Button>
-          <Button variant="danger" onClick={handleDeleteAll}>
-            Delete All
+          <Button variant="danger" onClick={confirmDelete}>
+            {deleteTarget === 'all' ? 'Delete All' : 'Delete Report'}
           </Button>
         </div>
       </Modal>
