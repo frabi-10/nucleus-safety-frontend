@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Use environment variable for API URL, fallback to production backend or localhost
 const API_BASE_URL = import.meta.env.VITE_API_URL ||
-  (import.meta.env.PROD ? 'https://your-backend-url.com/api' : 'http://localhost:3001');
+  (import.meta.env.PROD ? 'https://web-production-7090e.up.railway.app' : 'http://localhost:3001');
 
 // Create axios instance with default config
 const apiClient = axios.create({
