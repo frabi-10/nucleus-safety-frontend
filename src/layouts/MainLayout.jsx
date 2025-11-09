@@ -6,10 +6,10 @@ import { Button } from '@components/ui';
 
 const navigation = [
   { name: 'Submit Report', path: '/submit', icon: FileText, public: true },
-  { name: 'View Reports', path: '/view', icon: Eye, public: false },
-  { name: 'Assigned Reports', path: '/assigned', icon: CheckSquare, public: false },
-  { name: 'Analytics', path: '/analytics', icon: BarChart3, public: false },
-  { name: 'QR Codes', path: '/qr-codes', icon: QrCode, public: false },
+  { name: 'View Reports', path: '/view', icon: Eye, public: true },
+  { name: 'Assigned Reports', path: '/assigned', icon: CheckSquare, public: true },
+  { name: 'Analytics', path: '/analytics', icon: BarChart3, public: true },
+  { name: 'QR Codes', path: '/qr-codes', icon: QrCode, public: true },
 ];
 
 export const MainLayout = ({ children }) => {
