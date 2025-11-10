@@ -31,7 +31,7 @@ export const MainLayout = ({ children }) => {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <div className="flex items-center">
-              <h1 className="text-2xl font-bold">Nucleus Safety</h1>
+              <h1 className="text-2xl font-bold">Nucleus Safety Observation Reporting</h1>
             </div>
 
             {/* Desktop Navigation */}
