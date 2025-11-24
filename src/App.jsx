@@ -5,6 +5,8 @@ import { ToastContainer } from '@components/ui';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { MainLayout } from './layouts/MainLayout';
 import { SubmitReportPage } from './features/submit-report/SubmitReportPage';
+import { SubmitJHAPage } from './features/submit-jha/SubmitJHAPage';
+import { SubmitKaizenPage } from './features/submit-kaizen/SubmitKaizenPage';
 import { ViewReportsPage } from './features/view-reports/ViewReportsPage';
 import { AnalyticsPage } from './features/analytics/AnalyticsPage';
 import { AssignedReportsPage } from './features/assigned-reports/AssignedReportsPage';
@@ -19,6 +21,8 @@ function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/submit" replace />} />
           <Route path="/submit" element={<SubmitReportPage toast={toast} />} />
+          <Route path="/submit-jha" element={<SubmitJHAPage toast={toast} />} />
+          <Route path="/submit-kaizen" element={<SubmitKaizenPage toast={toast} />} />
           <Route
             path="/view"
             element={

@@ -1,6 +1,14 @@
+// Form types
+export const FORM_TYPES = [
+  { value: 'SIR', label: 'Safety Incident Report', icon: 'AlertTriangle' },
+  { value: 'JHA', label: 'Job Hazard Analysis', icon: 'Shield' },
+  { value: 'KAIZEN', label: 'Process Improvement (Kaizen)', icon: 'Lightbulb' },
+];
+
 // Location data
 export const LOCATIONS = {
   'Building 908': {
+    'Common Areas': ['Kitchen', 'Cubicles', 'CR1', 'CR2'],
     'Warehouse': [],
     'Clean Room': [
       'Common Area',
@@ -19,6 +27,7 @@ export const LOCATIONS = {
     ],
   },
   'Building 929': {
+    'Common Areas': ['Kitchen', 'Cubicles', 'CR1', 'CR2'],
     'Sapphire': [],
     'Warehouse': [],
     'Cleanroom': [],
@@ -77,4 +86,66 @@ export const IMMEDIATE_ACTIONS = [
   { value: 'first_aid', label: 'First aid administered' },
   { value: 'emergency_services', label: 'Emergency services called' },
   { value: 'photos_taken', label: 'Photos taken' },
+];
+
+// JHA-specific constants
+export const JHA_HAZARD_TYPES = [
+  { value: 'chemical_exposure', label: 'Chemical Exposure' },
+  { value: 'slip_trip_fall', label: 'Slip/Trip/Fall' },
+  { value: 'ergonomic', label: 'Ergonomic Hazard' },
+  { value: 'electrical', label: 'Electrical Hazard' },
+  { value: 'mechanical', label: 'Mechanical Hazard' },
+  { value: 'thermal', label: 'Thermal Hazard (Hot/Cold)' },
+  { value: 'noise', label: 'Noise/Vibration' },
+  { value: 'biological', label: 'Biological Hazard' },
+  { value: 'confined_space', label: 'Confined Space' },
+  { value: 'other', label: 'Other' },
+];
+
+export const JHA_CONTROL_MEASURES = [
+  { value: 'ppe_required', label: 'PPE Required' },
+  { value: 'engineering_controls', label: 'Engineering Controls' },
+  { value: 'administrative_controls', label: 'Administrative Controls' },
+  { value: 'ventilation', label: 'Ventilation/Exhaust' },
+  { value: 'machine_guarding', label: 'Machine Guarding' },
+  { value: 'lockout_tagout', label: 'Lockout/Tagout' },
+  { value: 'training_required', label: 'Training Required' },
+  { value: 'monitoring', label: 'Monitoring/Testing' },
+];
+
+export const JHA_RISK_LEVELS = [
+  { value: 'Low', label: 'Low Risk' },
+  { value: 'Medium', label: 'Medium Risk' },
+  { value: 'High', label: 'High Risk' },
+  { value: 'Extreme', label: 'Extreme Risk' },
+];
+
+// Kaizen-specific constants
+export const KAIZEN_CATEGORIES = [
+  { value: '', label: 'Select Category' },
+  { value: 'Batch Records', label: 'Batch Records' },
+  { value: 'Process', label: 'Process' },
+  { value: 'Equipment', label: 'Equipment' },
+  { value: 'Quality', label: 'Quality' },
+  { value: 'Safety', label: 'Safety' },
+  { value: 'Efficiency', label: 'Efficiency' },
+  { value: 'Documentation', label: 'Documentation' },
+  { value: 'Other', label: 'Other' },
+];
+
+export const KAIZEN_EXPECTED_BENEFITS = [
+  { value: 'time_savings', label: 'Time Savings' },
+  { value: 'cost_reduction', label: 'Cost Reduction' },
+  { value: 'quality_improvement', label: 'Quality Improvement' },
+  { value: 'safety_improvement', label: 'Safety Improvement' },
+  { value: 'waste_reduction', label: 'Waste Reduction' },
+  { value: 'process_simplification', label: 'Process Simplification' },
+  { value: 'better_documentation', label: 'Better Documentation' },
+];
+
+export const KAIZEN_IMPLEMENTATION_COST = [
+  { value: 'Free', label: 'Free (No Cost)' },
+  { value: 'Low', label: 'Low (<$500)' },
+  { value: 'Medium', label: 'Medium ($500-$5000)' },
+  { value: 'High', label: 'High (>$5000)' },
 ];

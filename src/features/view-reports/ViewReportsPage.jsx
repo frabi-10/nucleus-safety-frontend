@@ -3,7 +3,7 @@ import { Search, ChevronDown, ChevronUp, Trash2, MessageSquare, User, Download, 
 import { useReports, useDeleteReport, useDeleteAllReports, useUpdateReportStatus, useAssignReport } from '@hooks/useReports';
 import { useComments, useAddComment } from '@hooks/useComments';
 import { Button, Card, Badge, Input, Select, Textarea, Modal, LoadingScreen } from '@components/ui';
-import { STATUS_TYPES, STATUS_COLORS, PRIORITY_COLORS, REPORT_TYPES, PRIORITY_LEVELS } from '@utils/constants';
+import { STATUS_TYPES, STATUS_COLORS, PRIORITY_COLORS, REPORT_TYPES, PRIORITY_LEVELS, FORM_TYPES } from '@utils/constants';
 import { formatDate } from '@utils/helpers';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -20,6 +20,7 @@ export const ViewReportsPage = ({ toast }) => {
 
   // Filter states
   const [filters, setFilters] = useState({
+    formType: '',
     type: '',
     priority: '',
     status: '',
@@ -136,6 +137,7 @@ export const ViewReportsPage = ({ toast }) => {
 
   const clearFilters = () => {
     setFilters({
+      formType: '',
       type: '',
       priority: '',
       status: '',
@@ -153,6 +155,7 @@ export const ViewReportsPage = ({ toast }) => {
       report.description?.toLowerCase().includes(searchLower) ||
       report.status?.toLowerCase().includes(searchLower);
 
+    const matchesFormType = !filters.formType || report.form_type === filters.formType;
     const matchesType = !filters.type || report.type === filters.type;
     const matchesPriority = !filters.priority || report.priority === filters.priority;
     const matchesStatus = !filters.status || report.status === filters.status;
@@ -171,7 +174,7 @@ export const ViewReportsPage = ({ toast }) => {
       matchesDateTo = reportDate <= toDate;
     }
 
-    return matchesSearch && matchesType && matchesPriority && matchesStatus && matchesDateFrom && matchesDateTo;
+    return matchesSearch && matchesFormType && matchesType && matchesPriority && matchesStatus && matchesDateFrom && matchesDateTo;
   });
 
   // Export to Excel
@@ -351,7 +354,15 @@ export const ViewReportsPage = ({ toast }) => {
                 </Button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <Select
+                  value={filters.formType}
+                  onChange={(e) => setFilters({ ...filters, formType: e.target.value })}
+                  options={[
+                    { value: '', label: 'All Form Types' },
+                    ...FORM_TYPES.map(ft => ({ value: ft.value, label: ft.label }))
+                  ]}
+                />
                 <Select
                   value={filters.type}
                   onChange={(e) => setFilters({ ...filters, type: e.target.value })}
@@ -433,8 +444,13 @@ export const ViewReportsPage = ({ toast }) => {
                 }
               >
                 <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
+                  <div className="flex items-center gap-3 mb-2 flex-wrap">
                     <h3 className="text-xl font-semibold text-gray-900">{report.type}</h3>
+                    {report.form_type && (
+                      <Badge variant="info">
+                        {FORM_TYPES.find(ft => ft.value === report.form_type)?.label || report.form_type}
+                      </Badge>
+                    )}
                     <Badge variant={STATUS_COLORS[report.status]}>{report.status}</Badge>
                     <Badge variant={PRIORITY_COLORS[report.priority]}>{report.priority}</Badge>
                   </div>
