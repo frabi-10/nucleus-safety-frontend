@@ -37,22 +37,26 @@ apiClient.interceptors.response.use(
       // Server responded with error status
       const { status, data } = error.response;
 
+      // Normalize error message (handle both 'message' and 'error' fields)
+      const errorMessage = data?.message || data?.error || error.message || 'An error occurred';
+
       switch (status) {
         case 401:
           // Unauthorized - clear auth and redirect to login
           localStorage.removeItem('auth_token');
+          console.error('Unauthorized:', errorMessage);
           break;
         case 403:
-          console.error('Access forbidden:', data.message);
+          console.error('Access forbidden:', errorMessage);
           break;
         case 404:
-          console.error('Resource not found:', data.message);
+          console.error('Resource not found:', errorMessage);
           break;
         case 500:
-          console.error('Server error:', data.message);
+          console.error('Server error:', errorMessage);
           break;
         default:
-          console.error('API error:', data.message || error.message);
+          console.error('API error:', errorMessage);
       }
     } else if (error.request) {
       // Request made but no response
