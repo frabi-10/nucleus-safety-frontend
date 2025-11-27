@@ -89,6 +89,7 @@ export const SubmitKaizenPage = ({ toast }) => {
       ...data,
       form_type: 'KAIZEN',
       type: 'Process Improvement',
+      location: data.department || 'Company-Wide', // Use department as location, fallback to Company-Wide
       description: `Category: ${data.category}\n\nCurrent State:\n${data.current_state}\n\nProposed Improvement:\n${data.proposed_improvement}\n\nExpected Benefits: ${data.expected_benefits.join(', ')}\n\nEstimated Cost: ${data.implementation_cost}${data.collaborators ? `\n\nCollaborators: ${data.collaborators}` : ''}`,
       observer_name: data.submitted_by,
       observer_email: data.submitted_by_email,
