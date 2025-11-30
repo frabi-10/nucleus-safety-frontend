@@ -97,10 +97,6 @@ export const SubmitKaizenPage = ({ toast }) => {
       status: 'Open', // Can be changed to 'Proposed' in backend
     };
 
-    // Debug: Log what we're sending to the API
-    console.log('🔍 Kaizen Data Being Sent:', kaizenData);
-    console.log('📍 Location field:', kaizenData.location);
-
     createReport(kaizenData, {
       onSuccess: () => {
         setSubmitSuccess(true);
